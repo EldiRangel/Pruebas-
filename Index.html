@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Finanzas Personales</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="cabecera">
+        <div class="titulo-principal">Sistema Finanzas</div>
+        <nav class="navegacion">
+            <a href="#panel" class="boton-nav activo">Panel</a>
+            <a href="#categorias" class="boton-nav">Categorias</a>
+            <a href="#transacciones" class="boton-nav">Movimientos</a>
+            <a href="#presupuestos" class="boton-nav">Presupuestos</a>
+        </nav>
+    </header>
+
+    <main class="contenido">
+        
+        <!-- SECCION PANEL/DASHBOARD -->
+        <section id="panel" class="seccion-pagina">
+            <div class="panel-resumen">
+                <div class="tarjeta ingreso">
+                    <div class="tarjeta-titulo">Total Ingresos</div>
+                    <div class="tarjeta-valor" id="total-ingresos">$0.00</div>
+                    <div class="tarjeta-info" id="info-ingresos">Este mes</div>
+                </div>
+                
+                <div class="tarjeta gasto">
+                    <div class="tarjeta-titulo">Total Gastos</div>
+                    <div class="tarjeta-valor" id="total-gastos">$0.00</div>
+                    <div class="tarjeta-info" id="info-gastos">Este mes</div>
+                </div>
+                
+                <div class="tarjeta balance">
+                    <div class="tarjeta-titulo">Balance</div>
+                    <div class="tarjeta-valor" id="balance-total">$0.00</div>
+                    <div class="tarjeta-info" id="estado-balance">Disponible</div>
+                </div>
+            </div>
+
+            <div class="panel-principal">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        Gastos por Categoria
+                        <select class="selector-mes" id="selector-mes-gastos">
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="grafico-container">
+                        <canvas id="grafico-gastos"></canvas>
+                    </div>
+                    <div style="text-align: center; font-size: 12px; color: #7f8c8d;">
+                        Distribucion de gastos mensuales
+                    </div>
+                </div>
+
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        Ultimos Movimientos
+                        <button class="boton-chico" onclick="mostrarSeccion('transacciones')" style="float: right; margin-top: -5px;">
+                            Ver todos
+                        </button>
+                    </div>
+                    <div class="lista-contenedor">
+                        <div class="lista-cabecera">
+                            <span>Categoria</span>
+                            <span>Monto</span>
+                            <span>Fecha</span>
+                        </div>
+                        <ul id="lista-transacciones-recientes">
+                            <li class="estado-vacio">
+                                <div>No hay movimientos recientes</div>
+                                <button onclick="mostrarSeccion('transacciones')" class="boton-chico">Agregar movimiento</button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="seccion">
+                <div class="seccion-titulo">Acciones Rapidas</div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                    <a href="#transacciones" class="tarjeta" style="text-align: center; text-decoration: none;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">+</div>
+                        <div style="font-weight: bold; color: #2c3e50;">Nuevo Movimiento</div>
+                        <div style="font-size: 12px; color: #7f8c8d;">Registrar ingreso o gasto</div>
+                    </a>
+                    <a href="#categorias" class="tarjeta" style="text-align: center; text-decoration: none;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">C</div>
+                        <div style="font-weight: bold; color: #2c3e50;">Categorias</div>
+                        <div style="font-size: 12px; color: #7f8c8d;">Gestionar categorias</div>
+                    </a>
+                    <a href="#presupuestos" class="tarjeta" style="text-align: center; text-decoration: none;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">P</div>
+                        <div style="font-weight: bold; color: #2c3e50;">Presupuestos</div>
+                        <div style="font-size: 12px; color: #7f8c8d;">Establecer limites</div>
+                    </a>
+                    <div class="tarjeta" style="text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">R</div>
+                        <div style="font-weight: bold; color: #2c3e50;">Reportes</div>
+                        <div style="font-size: 12px; color: #7f8c8d;">Generar informes</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCION CATEGORIAS -->
+        <section id="categorias" class="seccion-pagina" style="display: none;">
+            <div class="contenedor-formulario">
+                <div class="seccion-titulo">Nueva Categoria</div>
+                <form id="form-categoria">
+                    <div class="grupo-form">
+                        <label for="nombre-cat">Nombre categoria</label>
+                        <input type="text" id="nombre-cat" placeholder="Ejemplo: Transporte, Comida..." required>
+                    </div>
+                    
+                    <div class="grupo-form">
+                        <label for="color-cat">Color</label>
+                        <div class="grupo-color">
+                            <input type="color" id="color-cat" value="#3498db">
+                            <div id="muestra-color" class="muestra-color"></div>
+                            <span id="valor-color">#3498db</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grupo-form">
+                        <label for="tipo-cat">Tipo</label>
+                        <select id="tipo-cat">
+                            <option value="gasto">Gasto</option>
+                            <option value="ingreso">Ingreso</option>
+                        </select>
+                    </div>
+                    
+                    <div class="acciones-form">
+                        <button type="submit" class="boton">Crear Categoria</button>
+                        <button type="button" class="boton-secundario" id="limpiar-cat">Limpiar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="seccion">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div class="seccion-titulo" style="margin-bottom: 0;">Categorias Existentes</div>
+                    <div style="display: flex; gap: 10px;">
+                        <div style="padding: 5px 10px; background: #ecf0f1; border-radius: 4px; font-size: 12px;">
+                            <span id="contador-cat">0</span> categorias
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <div class="filtros">
+                        <button class="filtro activo" data-filtro="todas">Todas</button>
+                        <button class="filtro" data-filtro="gasto">Gastos</button>
+                        <button class="filtro" data-filtro="ingreso">Ingresos</button>
+                    </div>
+                    <input type="text" id="buscar-cat" class="busqueda" placeholder="Buscar categoria...">
+                </div>
+
+                <ul class="grid-categorias" id="lista-categorias">
+                    <!-- Categorias precargadas -->
+                    <li class="item-categoria" style="border-left-color: #FF6384;">
+                        <div>
+                            <div style="color: #FF6384; font-weight: bold;">Comida</div>
+                            <div style="font-size: 12px; color: #7f8c8d;">gasto</div>
+                        </div>
+                        <button class="boton eliminar" style="font-size: 12px; padding: 5px 10px;" disabled style="opacity:0.5">Eliminar</button>
+                    </li>
+                    <li class="item-categoria" style="border-left-color: #36A2EB;">
+                        <div>
+                            <div style="color: #36A2EB; font-weight: bold;">Transporte</div>
+                            <div style="font-size: 12px; color: #7f8c8d;">gasto</div>
+                        </div>
+                        <button class="boton eliminar" style="font-size: 12px; padding: 5px 10px;" disabled style="opacity:0.5">Eliminar</button>
+                    </li>
+                    <li class="item-categoria" style="border-left-color: #28A745;">
+                        <div>
+                            <div style="color: #28A745; font-weight: bold;">Salario</div>
+                            <div style="font-size: 12px; color: #7f8c8d;">ingreso</div>
+                        </div>
+                        <button class="boton eliminar" style="font-size: 12px; padding: 5px 10px;" disabled style="opacity:0.5">Eliminar</button>
+                    </li>
+                </ul>
+
+                <div id="vacio-categorias" class="estado-vacio" style="display: none;">
+                    No hay categorias creadas
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCION TRANSACCIONES -->
+        <section id="transacciones" class="seccion-pagina" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div class="seccion-titulo" style="margin-bottom: 0;">Gestion de Movimientos</div>
+                <button id="btn-nuevo-mov" class="boton">Nuevo Movimiento</button>
+            </div>
+            <div class="seccion" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <select id="filtro-tipo" class="busqueda" style="max-width: 180px;">
+                        <option value="todos">Todos los tipos</option>
+                        <option value="ingreso">Ingresos</option>
+                        <option value="gasto">Gastos</option>
+                    </select>
+                    <select id="filtro-categoria" class="busqueda" style="max-width: 180px;">
+                        <option value="todas">Todas las categorias</option>
+                    </select>
+                    <input type="text" id="buscar-mov" class="busqueda" placeholder="Buscar por descripcion..." style="max-width: 200px;">
+                </div>
+            </div>
+            
+            <div class="seccion">
+                <div class="lista-cabecera" style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 100px;">
+                    <span>Tipo</span>
+                    <span>Categoria</span>
+                    <span>Monto</span>
+                    <span>Fecha</span>
+                    <span>Descripcion</span>
+                    <span>Acciones</span>
+                </div>
+                <ul id="lista-movimientos" style="list-style: none;"></ul>
+                <div id="mov-vacio" class="estado-vacio" style="display: none;">
+                    No hay movimientos registrados
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECCION PRESUPUESTOS COMPLETA -->
+        <section id="presupuestos" class="seccion-pagina" style="display: none;">
+            <div class="contenedor-formulario">
+                <div class="seccion-titulo" id="titulo-form-presupuesto">Nuevo Presupuesto</div>
+                <form id="form-presupuesto">
+                    <div class="grupo-form">
+                        <label for="categoria-presupuesto">Categoria (Gastos)</label>
+                        <select id="categoria-presupuesto" required>
+                            <option value="">Seleccionar categoria</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grupo-form">
+                        <label for="monto-presupuesto">Monto Presupuestado</label>
+                        <div class="input-monto">
+                            <input type="number" id="monto-presupuesto" min="0.01" step="0.01" placeholder="0.00" required>
+                            <span class="simbolo-moneda">$</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grupo-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label for="mes-presupuesto">Mes</label>
+                            <select id="mes-presupuesto" required>
+                                <option value="1">Enero</option>
+                                <option value="2">Febrero</option>
+                                <option value="3">Marzo</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Mayo</option>
+                                <option value="6">Junio</option>
+                                <option value="7">Julio</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="year-presupuesto">Año</label>
+                            <select id="year-presupuesto" required>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="acciones-form">
+                        <button type="submit" class="boton">Guardar Presupuesto</button>
+                        <button type="button" class="boton-secundario" id="limpiar-presupuesto">Limpiar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div style="margin: 15px 0; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; display: none;" id="alerta-presupuestos">
+                <!-- Alertas dinamicas apareceran aqui -->
+            </div>
+
+            <div class="seccion">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div class="seccion-titulo" style="margin-bottom: 0;">Presupuestos Configurados</div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="padding: 5px 10px; background: #ecf0f1; border-radius: 4px; font-size: 12px;">
+                            <span id="contador-presupuestos">0</span> presupuestos
+                        </div>
+                        <select id="filtro-mes" class="busqueda" style="max-width: 140px;">
+                            <option value="todos">Todos los meses</option>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                        <select id="filtro-year" class="busqueda" style="max-width: 100px;">
+                            <option value="todos">Todos los años</option>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div class="tarjeta">
+                        <div class="tarjeta-titulo">Total Presupuestado</div>
+                        <div class="tarjeta-valor" id="total-presupuestado">$0.00</div>
+                    </div>
+                    <div class="tarjeta">
+                        <div class="tarjeta-titulo">Total Gastado</div>
+                        <div class="tarjeta-valor" id="total-gastado">$0.00</div>
+                    </div>
+                    <div class="tarjeta">
+                        <div class="tarjeta-titulo">Diferencia</div>
+                        <div class="tarjeta-valor" id="diferencia-total">$0.00</div>
+                    </div>
+                </div>
+
+                <ul id="lista-presupuestos" style="list-style: none;"></ul>
+                
+                <div id="vacio-presupuestos" class="estado-vacio" style="display: none;">
+                    <p>No hay presupuestos configurados</p>
+                    <p style="margin-top: 10px; font-size: 14px;">Comienza creando tu primer presupuesto</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL PARA TRANSACCIONES -->
+    <div id="modal-transaccion" class="modal-oculto">
+        <div class="modal-overlay"></div>
+
+        <div class="modal-contenido">
+            <h2 class="modal-titulo">Nueva Transaccion</h2>
+
+            <form id="form-transaccion">
+
+                <div class="grupo-form">
+                    <label for="tipo-mov">Tipo</label>
+                    <select id="tipo-mov" required>
+                        <option value="ingreso">Ingreso</option>
+                        <option value="gasto">Gasto</option>
+                    </select>
+                </div>
+
+                <div class="grupo-
