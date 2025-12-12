@@ -18,39 +18,6 @@ function mostrarSeccion(id) {
     const seccion = document.getElementById(id);
     if (seccion) {
         seccion.style.display = 'block';
-        
-        // Si es la seccion de presupuestos, cargarlos despues de un breve delay
-        if (id === 'presupuestos') {
-            setTimeout(async () => {
-                if (typeof cargarPresupuestos === 'function') {
-                    await cargarPresupuestos();
-                }
-                if (typeof cargarCategoriasParaPresupuestos === 'function') {
-                    await cargarCategoriasParaPresupuestos();
-                }
-            }, 100);
-        }
-        
-        // Si es la seccion de transacciones, cargar categorias para filtro
-        if (id === 'transacciones') {
-            setTimeout(async () => {
-                if (typeof cargarCategoriasFiltro === 'function') {
-                    await cargarCategoriasFiltro();
-                }
-                if (typeof cargarMovimientos === 'function') {
-                    await cargarMovimientos();
-                }
-            }, 100);
-        }
-        
-        // Si es la seccion de categorias, cargarlas
-        if (id === 'categorias') {
-            setTimeout(async () => {
-                if (typeof cargarCategorias === 'function') {
-                    await cargarCategorias();
-                }
-            }, 100);
-        }
     }
     
     document.querySelectorAll('.boton-nav').forEach(btn => {
@@ -62,7 +29,6 @@ function mostrarSeccion(id) {
         botonActivo.classList.add('activo');
     }
 }
-
 document.addEventListener("DOMContentLoaded", () => {
     const btnPanelMov = document.getElementById("btn-nueva-transaccion");
 
