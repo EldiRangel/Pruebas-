@@ -1,4 +1,3 @@
-// js/dashboard.js
 class DashboardComponent {
     constructor() {
         this.graficoGastos = null;
@@ -8,7 +7,6 @@ class DashboardComponent {
     }
 
     async init() {
-        // Ejecutar carga inicial
         await this.cargarResumen();
         await this.cargarTransaccionesRecientes();
         await this.cargarPresupuestosDashboard();
@@ -24,7 +22,6 @@ class DashboardComponent {
             let gastosAno = 0;
 
             transacciones.forEach(trans => {
-                // asegurar formato fecha YYYY-MM-DD
                 if (!trans.fecha) return;
                 const [y, m, d] = trans.fecha.split('-');
                 const fecha = new Date(Number(y), Number(m) - 1, Number(d));
@@ -68,7 +65,6 @@ class DashboardComponent {
             const categorias = await obtenerTodos(STORES.CATEGORIAS);
 
             transacciones.sort((a,b) => {
-                // usar campo fecha o creado
                 if (a.creado && b.creado) return b.creado - a.creado;
                 return new Date(b.fecha) - new Date(a.fecha);
             });
@@ -100,10 +96,8 @@ class DashboardComponent {
     }
 
     async cargarPresupuestosDashboard() {
-        // no es crítico para la integridad del dashboard; mostrará estado si hay
         try {
             const presupuestos = await obtenerTodos(STORES.PRESUPUESTOS);
-            // se renderiza en su propia sección dentro de cargarPresupuestos (presupuestos.js)
         } catch(err) {
             console.error('Error cargarPresupuestosDashboard', err);
         }
@@ -113,7 +107,7 @@ class DashboardComponent {
         const mesActual = new Date().getMonth() + 1;
         const anoActual = new Date().getFullYear();
 
-        await this.crearGraficoGastos(mesActual); // por mes actual
+        await this.crearGraficoGastos(mesActual);
         await this.crearGraficoEvolucion(anoActual);
         await this.crearGraficoComparativa(mesActual);
         await this.crearGraficoBalance(mesActual);
@@ -133,15 +127,13 @@ class DashboardComponent {
             });
 
             transacciones.forEach(t => {
-                if (t.tipo !== 'gasto') return;
-                if (!t.fecha) return;
+                if (t.tipo !== 'gasto' || !t.fecha) return;
                 const [y,m,d] = t.fecha.split('-');
                 const fecha = new Date(Number(y), Number(m)-1, Number(d));
                 const mesTrans = fecha.getMonth() + 1;
                 const anoTrans = fecha.getFullYear();
                 if (anoTrans !== anoActual) return;
-                if (mes === 'acumulado' || mes === 'ac' || mes === 'acumulado' || mes === 'all') {
-                    // acumulado anual
+                if (mes === 'acumulado' || mes === 'ac' || mes === 'all') {
                     if (gastosPorCategoria[t.categoria]) gastosPorCategoria[t.categoria].total += t.monto;
                 } else {
                     if (Number(mes) === mesTrans) {
@@ -151,7 +143,6 @@ class DashboardComponent {
             });
 
             const categoriasConGastos = Object.values(gastosPorCategoria).filter(c => c.total > 0);
-
             const canvas = document.getElementById('grafico-gastos');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -159,7 +150,6 @@ class DashboardComponent {
             if (this.graficoGastos) this.graficoGastos.destroy();
 
             if (categoriasConGastos.length === 0) {
-                // dibujar texto simple
                 ctx.clearRect(0,0,canvas.width, canvas.height);
                 ctx.font = '14px Arial';
                 ctx.fillStyle = '#95a5a6';
@@ -339,18 +329,15 @@ class DashboardComponent {
         await this.crearGraficoGastos(mesActual);
         await this.crearGraficoBalance(mesActual);
         await this.crearGraficoComparativa(mesActual);
-        // no bloqueamos la UI; los gráficos se actualizan al terminar
     }
 }
 
 window.dashboardInstance = new DashboardComponent();
 
-// iniciar cuando db listo
 document.addEventListener('db-ready', async () => {
     await window.dashboardInstance.init();
 });
 
-// actualizar en eventos
 document.addEventListener('movimientos-actualizados', () => {
     window.dashboardInstance?.actualizarDashboard();
 });
@@ -360,3 +347,62 @@ document.addEventListener('categorias-actualizadas', () => {
 document.addEventListener('presupuestos-actualizados', () => {
     window.dashboardInstance?.actualizarDashboard();
 });
+
+// Categorías y filtros
+document.addEventListener('db-ready', async () => {
+    await cargarCategorias();
+    configurarFiltrosCategorias();
+});
+
+document.addEventListener("categorias-actualizadas", async () => {
+    await cargarCategorias();
+});
+
+async function cargarCategorias() {
+    const categorias = await obtenerTodos(STORES.CATEGORIAS);
+    const lista = document.getElementById('lista-categorias');
+    if (!lista) return;
+    lista.innerHTML = '';
+    const predefinidas = ['Alimentacion', 'Transporte', 'Ocio', 'Servicios', 'Salud', 'Educacion', 'Otros'];
+    categorias.forEach(cat => {
+        const li = document.createElement('li');
+        li.className = 'item-categoria';
+        li.style.borderLeftColor = cat.color;
+        li.innerHTML = `
+            <div class="item-categoria-info">
+                <div class="item-categoria-color" style="background-color:${cat.color}"></div>
+                <div>
+                    <div class="item-categoria-nombre">${cat.nombre}</div>
+                    <div class="item-categoria-tipo">${cat.tipo}</div>
+                </div>
+            </div>
+            <button class="boton boton-eliminar" onclick="eliminarCategoria(${cat.id})"
+                ${predefinidas.includes(cat.nombre) ? 'disabled style="opacity:0.5; cursor:not-allowed"' : ''}>
+                Eliminar
+            </button>
+        `;
+        lista.appendChild(li);
+    });
+}
+
+async function agregarCategoria(cat) {
+    await agregarItem(STORES.CATEGORIAS, cat);
+    document.dispatchEvent(new Event("categorias-actualizadas"));
+}
+
+async function eliminarCategoria(id) {
+    if (!confirm("¿Deseas eliminar esta categoría?")) return;
+    await eliminarItem(STORES.CATEGORIAS, id);
+    document.dispatchEvent(new Event("categorias-actualizadas"));
+}
+
+function configurarFiltrosCategorias() {
+    const filtros = document.querySelectorAll('.filtro');
+    filtros.forEach(filtro => {
+        filtro.addEventListener('click', async (e) => {
+            filtros.forEach(f => f.classList.remove('activo'));
+            e.target.classList.add('activo');
+            await cargarCategorias();
+        });
+    });
+                }
