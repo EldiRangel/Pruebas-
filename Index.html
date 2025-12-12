@@ -1,273 +1,90 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Finanzas</title>
-    <link rel="stylesheet" href="Style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Finanzas</title>
+<link rel="stylesheet" href="css/estilos.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <header class="cabecera">
-        <div class="titulo-principal">Sistema Finanzas</div>
-        <nav class="navegacion">
-            <a href="#panel" class="boton-nav activo">Panel</a>
-            <a href="#categorias" class="boton-nav">Categorias</a>
-            <a href="#transacciones" class="boton-nav">Movimientos</a>
-            <a href="#presupuestos" class="boton-nav">Presupuestos</a>
-        </nav>
-    </header>
 
-    <main class="contenido">
-        
-        <section id="panel" class="seccion-pagina">
-            <div class="panel-resumen">
-                <div class="tarjeta ingreso">
-                    <div class="tarjeta-titulo">Total Ingresos</div>
-                    <div class="tarjeta-valor" id="total-ingresos">$0.00</div>
-                    <div class="tarjeta-info" id="info-ingresos">Año</div>
-                </div>
-                
-                <div class="tarjeta gasto">
-                    <div class="tarjeta-titulo">Total Gastos</div>
-                    <div class="tarjeta-valor" id="total-gastos">$0.00</div>
-                    <div class="tarjeta-info" id="info-gastos">Año</div>
-                </div>
-                
-                <div class="tarjeta balance">
-                    <div class="tarjeta-titulo">Balance</div>
-                    <div class="tarjeta-valor" id="balance-total">$0.00</div>
-                    <div class="tarjeta-info" id="estado-balance">Disponible</div>
-                </div>
-            </div>
+<header>
+    <h1>Dashboard Finanzas</h1>
+</header>
 
-            <div class="panel-principal">
-                <div class="seccion">
-                    <div class="seccion-titulo">
-                        Gastos por Categoria
-                        <!-- opcional selector por mes eliminado por simplicidad: se controla desde dashboard.js -->
-                    </div>
-                    <div class="grafico-container">
-                        <canvas id="grafico-gastos"></canvas>
-                    </div>
-                    <div style="text-align: center; font-size: 12px; color: #7f8c8d;">
-                        Distribución de gastos
-                    </div>
-                </div>
+<main>
+    <section id="resumen">
+        <div>Total Ingresos: <span id="total-ingresos">$0.00</span></div>
+        <div>Total Gastos: <span id="total-gastos">$0.00</span></div>
+        <div>Balance: <span id="balance-total">$0.00</span> - <span id="estado-balance"></span></div>
+    </section>
 
-                <div class="seccion">
-                    <div class="seccion-titulo">
-                        Ultimos Movimientos
-                    </div>
-                    <div class="lista-contenedor">
-                        <div class="lista-cabecera">
-                            <span>Categoria</span>
-                            <span>Monto</span>
-                            <span>Fecha</span>
-                        </div>
-                        <ul id="lista-transacciones">
-                            <li class="estado-vacio">
-                                <div>No hay movimientos registrados</div>
-                                <button id="btn-nueva-transaccion" class="boton-chico">Agregar movimiento</button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+    <section id="graficos">
+        <canvas id="grafico-gastos"></canvas>
+        <canvas id="grafico-evolucion"></canvas>
+        <canvas id="grafico-comparativa"></canvas>
+        <canvas id="grafico-balance"></canvas>
+    </section>
 
-            <div class="seccion">
-                <div class="seccion-titulo">Acciones Rapidas</div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
-                    <a href="#transacciones" class="tarjeta" style="text-align: center; text-decoration: none;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">+</div>
-                        <div style="font-weight: bold; color: #2c3e50;">Nuevo Movimiento</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Registrar ingreso o gasto</div>
-                    </a>
-                    <a href="#categorias" class="tarjeta" style="text-align: center; text-decoration: none;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">C</div>
-                        <div style="font-weight: bold; color: #2c3e50;">Categorias</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Gestionar categorias</div>
-                    </a>
-                    <a href="#presupuestos" class="tarjeta" style="text-align: center; text-decoration: none;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">P</div>
-                        <div style="font-weight: bold; color: #2c3e50;">Presupuestos</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Controlar límites</div>
-                    </a>
-                    <div class="tarjeta" style="text-align: center;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">R</div>
-                        <div style="font-weight: bold; color: #2c3e50;">Reportes</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Generar informes</div>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <section id="transacciones">
+        <h2>Transacciones recientes</h2>
+        <div id="lista-transacciones-recientes"></div>
+        <button id="btn-nuevo-movimiento">Nuevo Movimiento</button>
+    </section>
 
-        
-        <section id="categorias" class="seccion-pagina" style="display: none;">
-            <!-- tu sección categorías actual aquí (sin cambios) -->
-            <!-- mantén el HTML que ya tienes para categorias -->
-        </section>
+    <section id="movimientos">
+        <h2>Todos los Movimientos</h2>
+        <div id="lista-movimientos"></div>
+    </section>
 
-        
-        <section id="transacciones" class="seccion-pagina" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div class="seccion-titulo" style="margin-bottom: 0;">Gestión de Movimientos</div>
-                <button id="btn-nuevo-mov" class="boton">Nuevo Movimiento</button>
-            </div>
-            <div class="seccion" style="margin-bottom: 20px;">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <select id="filtro-tipo" class="busqueda" style="max-width: 180px;">
-                        <option value="todos">Todos los tipos</option>
-                        <option value="ingreso">Ingresos</option>
-                        <option value="gasto">Gastos</option>
-                    </select>
-                    <select id="filtro-categoria" class="busqueda" style="max-width: 180px;">
-                        <option value="todas">Todas las categorías</option>
-                    </select>
-                    <input type="text" id="buscar-mov" class="busqueda" placeholder="Buscar por descripción..." style="max-width: 200px;">
-                </div>
-            </div>
-            
-            <div class="seccion">
-                <div class="lista-cabecera" style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 100px;">
-                    <span>Tipo</span>
-                    <span>Categoría</span>
-                    <span>Monto</span>
-                    <span>Fecha</span>
-                    <span>Descripción</span>
-                    <span>Acciones</span>
-                </div>
-                <ul id="lista-movimientos" style="list-style: none;"></ul>
-                <div id="mov-vacio" class="estado-vacio" style="display: none;">
-                    No hay movimientos registrados
-                </div>
-            </div>
-        </section>        
+    <section id="presupuestos">
+        <h2>Presupuestos</h2>
+        <div id="lista-presupuestos"></div>
+    </section>
 
-        <section id="presupuestos" class="seccion-pagina" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div class="seccion-titulo" style="margin-bottom: 0;">Gestión de Presupuestos</div>
-                <button id="btn-nuevo-presupuesto" class="boton">Nuevo Presupuesto</button>
-            </div>
+    <section id="categorias">
+        <h2>Categorías</h2>
+        <ul id="lista-categorias"></ul>
+    </section>
+</main>
 
-            <div class="seccion">
-                <div style="margin-bottom: 12px;">
-                    <select id="filtro-pres-mes" class="busqueda" style="max-width: 220px;">
-                        <option value="actual">Mes Actual</option>
-                        <option value="acumulado">Acumulado Anual</option>
-                    </select>
-                </div>
-
-                <div class="lista-cabecera" style="grid-template-columns: 1fr 1fr 1fr 100px;">
-                    <span>Categoría</span>
-                    <span>Mes/Año</span>
-                    <span>Monto</span>
-                    <span>Acciones</span>
-                </div>
-
-                <ul id="lista-presupuestos" style="list-style: none; margin-top: 8px;"></ul>
-
-                <div id="pres-vacio" class="estado-vacio" style="display:none; margin-top:10px;">
-                    No hay presupuestos configurados
-                </div>
-            </div>
-        </section>
-    </main>
-
-<!-- MODAL: NUEVA TRANSACCIÓN (mantén tu modal, ya lo tenías) -->
-<div id="modal-transaccion" class="modal-oculto">
-    <div class="modal-overlay"></div>
-
-    <div class="modal-contenido">
-        <h2 class="modal-titulo">Nueva Transacción</h2>
-
-        <form id="form-transaccion">
-
-            <div class="grupo-form">
-                <label for="tipo-mov">Tipo</label>
-                <select id="tipo-mov" required>
-                    <option value="ingreso">Ingreso</option>
-                    <option value="gasto">Gasto</option>
-                </select>
-            </div>
-
-            <div class="grupo-form">
-                <label for="monto-mov">Monto</label>
-                <div class="input-monto">
-                    <input type="number" id="monto-mov" min="0.01" step="0.01" required>
-                    <span class="simbolo-moneda">$</span>
-                </div>
-            </div>
-
-            <div class="grupo-form">
-                <label for="fecha-mov">Fecha</label>
-                <input type="date" id="fecha-mov" required>
-            </div>
-
-            <div class="grupo-form">
-                <label for="categoria-mov">Categoría</label>
-                <select id="categoria-mov" required></select>
-            </div>
-
-            <div class="grupo-form">
-                <label for="descripcion-mov">Descripción (opcional)</label>
-                <input type="text" id="descripcion-mov" placeholder="Ej: Pago de luz, Venta producto...">
-            </div>
-
-            <div class="acciones-form modal-acciones">
-                <button type="submit" class="boton">Guardar</button>
-                <button type="button" id="cerrar-modal" class="boton-secundario">Cancelar</button>
-            </div>
-        </form>
-    </div>
+<!-- Modal Movimiento -->
+<div id="modal-nuevo-movimiento" class="modal">
+    <form id="form-nuevo-movimiento">
+        <h3>Nuevo Movimiento</h3>
+        <input type="text" name="descripcion" placeholder="Descripción" required>
+        <input type="number" name="monto" placeholder="Monto" required step="0.01">
+        <select name="tipo" required>
+            <option value="">Tipo</option>
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+        </select>
+        <select name="categoria" required id="select-categoria-mov">
+        </select>
+        <input type="date" name="fecha" required>
+        <button type="submit">Agregar</button>
+        <button type="button" id="btn-cancelar-movimiento">Cancelar</button>
+    </form>
 </div>
 
-<!-- MODAL: NUEVO PRESUPUESTO -->
-<div id="modal-presupuesto" class="modal-oculto">
-    <div class="modal-overlay"></div>
-    <div class="modal-contenido">
-        <h2 class="modal-titulo">Nuevo Presupuesto</h2>
-        <form id="form-presupuesto">
-            <div class="grupo-form">
-                <label for="categoria-pres">Categoría</label>
-                <select id="categoria-pres" required></select>
-            </div>
-
-            <div class="grupo-form">
-                <label for="monto-pres">Monto</label>
-                <input type="number" id="monto-pres" min="0.01" step="0.01" required>
-            </div>
-
-            <div class="grupo-form">
-                <label for="mes-pres">Mes</label>
-                <select id="mes-pres" required>
-                    <option value="1">Enero</option><option value="2">Febrero</option>
-                    <option value="3">Marzo</option><option value="4">Abril</option>
-                    <option value="5">Mayo</option><option value="6">Junio</option>
-                    <option value="7">Julio</option><option value="8">Agosto</option>
-                    <option value="9">Septiembre</option><option value="10">Octubre</option>
-                    <option value="11">Noviembre</option><option value="12">Diciembre</option>
-                </select>
-            </div>
-
-            <div class="grupo-form">
-                <label for="ano-pres">Año</label>
-                <input type="number" id="ano-pres" min="2000" max="3000" value="">
-            </div>
-
-            <div class="acciones-form modal-acciones">
-                <button type="submit" class="boton">Guardar</button>
-                <button type="button" id="cerrar-modal-pres" class="boton-secundario">Cancelar</button>
-            </div>
-        </form>
-    </div>
+<!-- Modal Presupuesto -->
+<div id="modal-nuevo-presupuesto" class="modal">
+    <form id="form-nuevo-presupuesto">
+        <h3>Nuevo Presupuesto</h3>
+        <select name="categoria" required id="select-categoria-pres">
+        </select>
+        <input type="number" name="monto" placeholder="Monto" required step="0.01">
+        <input type="number" name="mes" placeholder="Mes (1-12)" required min="1" max="12">
+        <input type="number" name="ano" placeholder="Año" required min="2000" max="2100">
+        <button type="submit">Agregar</button>
+        <button type="button" id="btn-cancelar-presupuesto">Cancelar</button>
+    </form>
 </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/categorias.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/navegacion.js"></script>
-    <script src="js/movimientos.js"></script>
-    <script src="js/presupuestos.js"></script>
+<script src="js/db.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/movimientos.js"></script>
+<script src="js/presupuestos.js"></script>
 </body>
-    </html>
+</html>
