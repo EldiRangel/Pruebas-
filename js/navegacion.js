@@ -37,4 +37,4 @@ function mostrarSeccion(id) {
     document.querySelectorAll('.boton-nav').forEach(btn => btn.classList.remove('activo'));
     const botonActivo = document.querySelector(`a[href="#${id}"]`);
     if (botonActivo) botonActivo.classList.add('activo');
-            }
+}
