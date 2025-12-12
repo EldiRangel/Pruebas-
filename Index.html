@@ -1,310 +1,123 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Sistema Finanzas</title>
-    <link rel="stylesheet" href="Style.css" />
+    <meta charset="UTF-8">
+    <title>App de Finanzas</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin:20px; }
+        button { cursor:pointer; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+                 background: rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+        .modal-oculto { display:none; }
+        .modal form { background:#fff; padding:20px; border-radius:8px; display:flex; flex-direction:column; gap:10px; }
+        .item-lista, .item-categoria { display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr 100px; 
+                                       align-items:center; padding:6px; border-bottom:1px solid #ddd; }
+        .item-categoria { grid-template-columns: auto 1fr 100px; padding:4px 0; border-left:4px solid; margin-bottom:4px; }
+        .item-categoria-color { width:16px; height:16px; border-radius:50%; display:inline-block; margin-right:6px; }
+        .filtro { margin-right:6px; padding:4px 8px; cursor:pointer; border:1px solid #ccc; border-radius:4px; }
+        .filtro.activo { background:#3498db; color:#fff; border-color:#2980b9; }
+        #lista-movimientos, #lista-categorias { margin-top:10px; list-style:none; padding:0; }
+    </style>
 </head>
 <body>
-    <header class="cabecera">
-        <div class="titulo-principal">Sistema Finanzas</div>
-        <nav class="navegacion">
-            <a href="#panel" class="boton-nav activo">Panel</a>
-            <a href="#categorias" class="boton-nav">Categorias</a>
-            <a href="#transacciones" class="boton-nav">Movimientos</a>
-            <a href="#presupuestos" class="boton-nav">Presupuestos</a>
-        </nav>
-    </header>
 
-    <main class="contenido">
-        <section id="panel" class="seccion-pagina">
-            <div class="panel-resumen">
-                <div class="tarjeta ingreso">
-                    <div class="tarjeta-titulo">Total Ingresos</div>
-                    <div class="tarjeta-valor" id="total-ingresos">$0.00</div>
-                    <div class="tarjeta-info" id="info-ingresos">Acumulado anual</div>
-                </div>
-                <div class="tarjeta gasto">
-                    <div class="tarjeta-titulo">Total Gastos</div>
-                    <div class="tarjeta-valor" id="total-gastos">$0.00</div>
-                    <div class="tarjeta-info" id="info-gastos">Acumulado anual</div>
-                </div>
-                <div class="tarjeta balance">
-                    <div class="tarjeta-titulo">Balance</div>
-                    <div class="tarjeta-valor" id="balance-total">$0.00</div>
-                    <div class="tarjeta-info" id="estado-balance">Disponible</div>
-                </div>
-            </div>
+<h1>Dashboard de Finanzas</h1>
 
-            <div class="panel-principal">
-                <div class="seccion">
-                    <div class="seccion-titulo">
-                        Gastos por Categoria
-                        <select class="selector-mes" id="selector-grafico">
-                            <option value="acumulado">Acumulado Anual</option>
-                            <option value="1">Enero</option>
-                            <option value="2">Febrero</option>
-                            <option value="3">Marzo</option>
-                            <option value="4">Abril</option>
-                            <option value="5">Mayo</option>
-                            <option value="6">Junio</option>
-                            <option value="7">Julio</option>
-                            <option value="8">Agosto</option>
-                            <option value="9">Septiembre</option>
-                            <option value="10">Octubre</option>
-                            <option value="11">Noviembre</option>
-                            <option value="12">Diciembre</option>
-                        </select>
-                    </div>
-                    <div class="grafico-container">
-                        <canvas id="grafico-gastos"></canvas>
-                    </div>
-                    <div style="text-align: center; font-size: 12px; color: #7f8c8d;">
-                        Distribucion de gastos (selecciona mes o acumulado)
-                    </div>
-                </div>
+<!-- BOTONES PRINCIPALES -->
+<div style="margin-bottom:20px;">
+    <button id="btn-nuevo-mov">Nuevo Movimiento</button>
+    <button id="btn-presupuesto">Presupuestos</button>
+</div>
 
-                <div class="seccion">
-                    <div class="seccion-titulo">Ultimos Movimientos</div>
-                    <div class="lista-contenedor">
-                        <div class="lista-cabecera">
-                            <span>Categoria</span>
-                            <span>Monto</span>
-                            <span>Fecha</span>
-                        </div>
-                        <ul id="lista-transacciones">
-                            <li class="estado-vacio">
-                                <div>No hay movimientos registrados</div>
-                                <button id="btn-nueva-transaccion" class="boton-chico">Agregar movimiento</button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+<!-- FILTROS MOVIMIENTOS -->
+<div style="margin-bottom:10px;">
+    <select id="filtro-tipo">
+        <option value="todos">Todos</option>
+        <option value="ingreso">Ingresos</option>
+        <option value="gasto">Gastos</option>
+    </select>
 
-            <div class="seccion">
-                <div class="seccion-titulo">Acciones Rapidas</div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
-                    <a href="#transacciones" class="tarjeta" style="text-align: center; text-decoration: none;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">+</div>
-                        <div style="font-weight: bold; color: #2c3e50;">Nuevo Movimiento</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Registrar ingreso o gasto</div>
-                    </a>
-                    <a href="#categorias" class="tarjeta" style="text-align: center; text-decoration: none;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">C</div>
-                        <div style="font-weight: bold; color: #2c3e50;">Categorias</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Gestionar categorias</div>
-                    </a>
-                    <a href="#presupuestos" class="tarjeta" style="text-align: center; text-decoration: none;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">P</div>
-                        <div style="font-weight: bold; color: #2c3e50;">Presupuestos</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Control mensual</div>
-                    </a>
-                    <div class="tarjeta" style="text-align: center;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">R</div>
-                        <div style="font-weight: bold; color: #2c3e50;">Reportes</div>
-                        <div style="font-size: 12px; color: #7f8c8d;">Generar informes</div>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <select id="filtro-categoria">
+        <option value="todas">Todas las categorías</option>
+    </select>
 
-        <section id="categorias" class="seccion-pagina" style="display: none;">
-            <div class="contenedor-formulario">
-                <div class="seccion-titulo">Nueva Categoria</div>
-                <form id="form-categoria">
-                    <div class="grupo-form">
-                        <label for="nombre-cat">Nombre categoria</label>
-                        <input type="text" id="nombre-cat" placeholder="Ejemplo: Transporte, Comida..." required>
-                    </div>
-                    <div class="grupo-form">
-                        <label for="color-cat">Color</label>
-                        <div class="grupo-color">
-                            <input type="color" id="color-cat" value="#3498db">
-                            <div id="muestra-color" class="muestra-color"></div>
-                            <span id="valor-color">#3498db</span>
-                        </div>
-                    </div>
-                    <div class="grupo-form">
-                        <label for="tipo-cat">Tipo</label>
-                        <select id="tipo-cat">
-                            <option value="gasto">Gasto</option>
-                            <option value="ingreso">Ingreso</option>
-                        </select>
-                    </div>
-                    <div class="acciones-form">
-                        <button type="submit" class="boton">Crear Categoria</button>
-                        <button type="button" class="boton-secundario" id="limpiar-cat">Limpiar</button>
-                    </div>
-                </form>
-            </div>
+    <input type="text" id="buscar-mov" placeholder="Buscar descripción">
+</div>
 
-            <div class="seccion">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div class="seccion-titulo" style="margin-bottom: 0;">Categorias Existentes</div>
-                    <div style="display: flex; gap: 10px;">
-                        <div style="padding: 5px 10px; background: #ecf0f1; border-radius: 4px; font-size: 12px;">
-                            <span id="contador-cat">0</span> categorias
-                        </div>
-                    </div>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <div class="filtros">
-                        <button class="filtro activo" data-filtro="todas">Todas</button>
-                        <button class="filtro" data-filtro="gasto">Gastos</button>
-                        <button class="filtro" data-filtro="ingreso">Ingresos</button>
-                    </div>
-                    <input type="text" id="buscar-cat" class="busqueda" placeholder="Buscar categoria...">
-                </div>
+<!-- LISTA DE MOVIMIENTOS -->
+<ul id="lista-movimientos"></ul>
+<div id="mov-vacio" style="display:none;">No hay movimientos</div>
 
-                <ul class="grid-categorias" id="lista-categorias"></ul>
-                <div id="vacio-categorias" class="estado-vacio" style="display: none;">No hay categorias creadas</div>
-            </div>
-        </section>
+<hr>
 
-        <section id="transacciones" class="seccion-pagina" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div class="seccion-titulo" style="margin-bottom: 0;">Gestión de Movimientos</div>
-                <button id="btn-nuevo-mov" class="boton">Nuevo Movimiento</button>
-            </div>
-            <div class="seccion" style="margin-bottom: 20px;">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <select id="filtro-tipo" class="busqueda" style="max-width: 180px;">
-                        <option value="todos">Todos los tipos</option>
-                        <option value="ingreso">Ingresos</option>
-                        <option value="gasto">Gastos</option>
-                    </select>
+<h2>Categorías</h2>
 
-                    <select id="filtro-categoria" class="busqueda" style="max-width: 180px;">
-                        <option value="todas">Todas las categorías</option>
-                    </select>
+<!-- FILTROS CATEGORÍAS -->
+<div style="margin-bottom:10px;">
+    <span class="filtro activo" data-filtro="todas">Todas</span>
+    <span class="filtro" data-filtro="ingreso">Ingresos</span>
+    <span class="filtro" data-filtro="gasto">Gastos</span>
+</div>
 
-                    <input type="text" id="buscar-mov" class="busqueda" placeholder="Buscar por descripción..." style="max-width: 200px;">
-                </div>
-            </div>
+<!-- LISTA DE CATEGORÍAS -->
+<ul id="lista-categorias"></ul>
+<div id="vacio-categorias" style="display:none;">No hay categorías</div>
 
-            <div class="seccion">
-                <div class="lista-cabecera" style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 100px;">
-                    <span>Tipo</span>
-                    <span>Categoría</span>
-                    <span>Monto</span>
-                    <span>Fecha</span>
-                    <span>Descripción</span>
-                    <span>Acciones</span>
-                </div>
+<hr>
 
-                <ul id="lista-movimientos" style="list-style: none;"></ul>
-                <div id="mov-vacio" class="estado-vacio" style="display: none;">No hay movimientos registrados</div>
-            </div>
-        </section>
+<!-- MODAL NUEVO MOVIMIENTO -->
+<div id="modal-transaccion" class="modal modal-oculto">
+    <form id="form-transaccion">
+        <label>Tipo:</label>
+        <select id="tipo-mov">
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+        </select>
 
-        <section id="presupuestos" class="seccion-pagina" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div class="seccion-titulo" style="margin-bottom: 0;">Presupuestos</div>
-                <button id="btn-nuevo-pres" class="boton">Nuevo Presupuesto</button>
-            </div>
+        <label>Monto:</label>
+        <input type="number" id="monto-mov" placeholder="Monto">
 
-            <div class="seccion">
-                <div class="lista-cabecera" style="grid-template-columns: 1fr 1fr 1fr 1fr 100px;">
-                    <span>Categoria</span>
-                    <span>Mes</span>
-                    <span>Monto</span>
-                    <span>Gastado</span>
-                    <span>Acciones</span>
-                </div>
+        <label>Fecha:</label>
+        <input type="date" id="fecha-mov">
 
-                <ul id="lista-presupuestos" style="list-style:none;"></ul>
-                <div id="pres-vacio" class="estado-vacio" style="display:none;">No hay presupuestos configurados</div>
-            </div>
+        <label>Categoría:</label>
+        <select id="categoria-mov"></select>
 
-            <!-- Modal Presupuesto (simple) -->
-            <div id="modal-presupuesto" class="modal-oculto">
-                <div class="modal-overlay"></div>
-                <div class="modal-contenido">
-                    <h2 class="modal-titulo">Nuevo Presupuesto</h2>
-                    <form id="form-presupuesto">
-                        <div class="grupo-form">
-                            <label for="pres-categoria">Categoría</label>
-                            <select id="pres-categoria" required></select>
-                        </div>
-                        <div class="grupo-form">
-                            <label for="pres-mes">Mes</label>
-                            <select id="pres-mes" required>
-                                <option value="1">Enero</option><option value="2">Febrero</option>
-                                <option value="3">Marzo</option><option value="4">Abril</option>
-                                <option value="5">Mayo</option><option value="6">Junio</option>
-                                <option value="7">Julio</option><option value="8">Agosto</option>
-                                <option value="9">Septiembre</option><option value="10">Octubre</option>
-                                <option value="11">Noviembre</option><option value="12">Diciembre</option>
-                            </select>
-                        </div>
-                        <div class="grupo-form">
-                            <label for="pres-monto">Monto</label>
-                            <input type="number" id="pres-monto" min="0.01" step="0.01" required />
-                        </div>
+        <label>Descripción:</label>
+        <input type="text" id="descripcion-mov" placeholder="Descripción">
 
-                        <div class="acciones-form modal-acciones">
-                            <button type="submit" class="boton">Guardar</button>
-                            <button type="button" id="cerrar-modal-pres" class="boton-secundario">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Modal Transaccion -->
-    <div id="modal-transaccion" class="modal-oculto">
-        <div class="modal-overlay"></div>
-        <div class="modal-contenido">
-            <h2 class="modal-titulo">Nueva Transacción</h2>
-            <form id="form-transaccion">
-                <div class="grupo-form">
-                    <label for="tipo-mov">Tipo</label>
-                    <select id="tipo-mov" required>
-                        <option value="ingreso">Ingreso</option>
-                        <option value="gasto">Gasto</option>
-                    </select>
-                </div>
-
-                <div class="grupo-form">
-                    <label for="monto-mov">Monto</label>
-                    <div class="input-monto">
-                        <input type="number" id="monto-mov" min="0.01" step="0.01" required>
-                        <span class="simbolo-moneda">$</span>
-                    </div>
-                </div>
-
-                <div class="grupo-form">
-                    <label for="fecha-mov">Fecha</label>
-                    <input type="date" id="fecha-mov" required>
-                </div>
-
-                <div class="grupo-form">
-                    <label for="categoria-mov">Categoría</label>
-                    <select id="categoria-mov" required></select>
-                </div>
-
-                <div class="grupo-form">
-                    <label for="descripcion-mov">Descripción (opcional)</label>
-                    <input type="text" id="descripcion-mov" placeholder="Ej: Pago de luz, Venta producto...">
-                </div>
-
-                <div class="acciones-form modal-acciones">
-                    <button type="submit" class="boton">Guardar</button>
-                    <button type="button" id="cerrar-modal" class="boton-secundario">Cancelar</button>
-                </div>
-            </form>
+        <div style="display:flex; gap:10px;">
+            <button type="submit">Guardar</button>
+            <button type="button" id="cerrar-modal">Cancelar</button>
         </div>
-    </div>
+    </form>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/categorias.js"></script>
-    <script src="js/movimientos.js"></script>
-    <script src="js/presupuestos.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/navegacion.js"></script>
+<!-- MODAL PRESUPUESTOS -->
+<div id="modal-presupuesto" class="modal modal-oculto">
+    <div style="background:#fff; padding:20px; border-radius:8px; width:300px; position:relative;">
+        <button id="cerrar-presupuesto" style="position:absolute; top:8px; right:8px;">X</button>
+        <h3>Presupuestos</h3>
+        <p>Aquí va la gestión de presupuestos...</p>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="db.js"></script>
+<script src="categorias.js"></script>
+<script src="movimientos.js"></script>
+
+<script>
+    // BOTÓN PRESUPUESTOS
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnPres = document.getElementById('btn-presupuesto');
+        const modalPres = document.getElementById('modal-presupuesto');
+        const cerrarPres = document.getElementById('cerrar-presupuesto');
+
+        btnPres?.addEventListener('click', () => modalPres.classList.remove('modal-oculto'));
+        cerrarPres?.addEventListener('click', () => modalPres.classList.add('modal-oculto'));
+    });
+</script>
+
 </body>
-                                    </html>
+</html>
