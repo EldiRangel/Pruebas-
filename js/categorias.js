@@ -139,4 +139,4 @@ async function configurarFiltros() {
             await cargarCategorias(filtroActivo, e.target.value);
         });
     }
-        }
+                                    }
