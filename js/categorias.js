@@ -46,23 +46,29 @@ async function cargarCategorias(filtro = 'todas', busqueda = '') {
     
     catsFiltradas.forEach(cat => {
         const li = document.createElement('li');
+        li.classList.add("item-categoria");
+        li.dataset.tipo = cat.tipo;
         li.style.borderLeftColor = cat.color;
         
+        const colorTipo = cat.tipo === "gasto" ? "#e74c3c" : "#27ae60";
         li.innerHTML = `
-            <div class="item-categoria-info">
-                <div class="item-categoria-color" style="background-color:${cat.color}"></div>
-                <div>
-                    <div class="item-categoria-nombre">${cat.nombre}</div>
-                    <div class="item-categoria-tipo">${cat.tipo}</div>
-                </div>
-            </div>
-            <button class="boton boton-eliminar" onclick="eliminarCategoria(${cat.id})" 
-                ${predefinidas.includes(cat.nombre) ? 'disabled style="opacity:0.5; cursor:not-allowed"' : ''}>
-                Eliminar
-            </button>
-        `;
-        grid.appendChild(li);
-    });
+        <div>
+        <div style="color: ${cat.color}; font-weight: bold;">${cat.nombre}</div>
+        <div style="font-size: 12px; color:${colorTipo}; font-weight:bold;">
+        ${cat.tipo}
+        </div>
+        </div>
+        <button
+            class="boton eliminar"
+            style="font-size: 12px; padding: 5px 10px;"
+            ${predefinidas.includes(cat.nombre) ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="eliminarCategoria(${cat.id})"`}
+        >
+            Eliminar
+        </button>
+    `;
+
+    grid.appendChild(li);
+});
 }
 
 async function configurarFormulario() {
@@ -180,4 +186,4 @@ async function configurarFiltros() {
             await cargarCategorias(filtroActivo, e.target.value);
         });
     }
-                  }
+}
