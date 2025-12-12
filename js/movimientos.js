@@ -1,210 +1,197 @@
-document.addEventListener("db-ready", async () => {
-    await cargarCategoriasEnFiltros();
+// js/movimientos.js
+document.addEventListener('db-ready', async () => {
+    await cargarCategoriasFiltro();
     await cargarCategoriasEnModal();
     await cargarMovimientos();
-    configurarEventosMovimientos();
+    configurarBotones();
+    configurarFiltros();
+    configurarFormularioMov();
+});
+document.addEventListener("categorias-actualizadas", async () => {
+    await cargarCategoriasEnModal();
+    await cargarCategoriasFiltro();
 });
 
-/* ---------------------------------------------------
-    Cargar categorías en los filtros de movimientos
----------------------------------------------------- */
-async function cargarCategoriasEnFiltros() {
-    const select = document.getElementById("filtro-categoria");
-    if (!select) return;
-
+async function cargarCategoriasFiltro() {
     const categorias = await obtenerTodos(STORES.CATEGORIAS);
-
-    select.innerHTML = `<option value="todas">Todas las categorías</option>`;
-
+    const filtro = document.getElementById("filtro-categoria");
+    if (!filtro) return;
+    filtro.innerHTML = `<option value="todas">Todas las categorías</option>`;
     categorias.forEach(cat => {
         const op = document.createElement("option");
         op.value = cat.id;
         op.textContent = cat.nombre;
-        select.appendChild(op);
+        filtro.appendChild(op);
     });
 }
 
-/* ---------------------------------------------------
-    Cargar categorías en el modal de nueva transacción
----------------------------------------------------- */
 async function cargarCategoriasEnModal() {
+    const categorias = await obtenerTodos(STORES.CATEGORIAS);
     const select = document.getElementById("categoria-mov");
     if (!select) return;
-
-    const categorias = await obtenerTodos(STORES.CATEGORIAS);
-
     select.innerHTML = "";
-
     categorias.forEach(cat => {
         const op = document.createElement("option");
         op.value = cat.id;
         op.textContent = cat.nombre;
         select.appendChild(op);
     });
+    // también actualizar select del panel de presupuestos si existe
+    const selPres = document.getElementById("pres-categoria");
+    if (selPres) {
+        selPres.innerHTML = '';
+        categorias.filter(c => c.tipo === 'gasto').forEach(cat => {
+            const op = document.createElement("option");
+            op.value = cat.id;
+            op.textContent = cat.nombre;
+            selPres.appendChild(op);
+        });
+    }
 }
 
-/* ---------------------------------------------------
-    Cargar lista de movimientos
----------------------------------------------------- */
+/* cargarMovimientos y demás se mantienen igual (mismo formato que ya usabas) */
 async function cargarMovimientos() {
     const lista = document.getElementById("lista-movimientos");
     const vacio = document.getElementById("mov-vacio");
     if (!lista) return;
-
-    let movimientos = await obtenerTodos(STORES.MOVIMIENTOS);
+    const movimientos = await obtenerTodos(STORES.MOVIMIENTOS);
     const categorias = await obtenerTodos(STORES.CATEGORIAS);
-
-    // FILTROS
-    const tipoFiltro = document.getElementById("filtro-tipo").value;
-    const catFiltro = document.getElementById("filtro-categoria").value;
-    const busqueda = document.getElementById("buscar-mov").value.toLowerCase();
-
-    movimientos = movimientos.filter(m => {
-        const coincideTipo = tipoFiltro === "todos" || m.tipo === tipoFiltro;
-        const coincideCategoria = catFiltro === "todas" || String(m.categoria) === String(catFiltro);
-        const coincideBusqueda = m.descripcion?.toLowerCase().includes(busqueda);
-        return coincideTipo && coincideCategoria && coincideBusqueda;
-    });
-
     lista.innerHTML = "";
-
     if (movimientos.length === 0) {
         vacio.style.display = "block";
         return;
     }
     vacio.style.display = "none";
-
     movimientos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
     movimientos.forEach(mov => {
-        const cat = categorias.find(c => c.id === mov.categoria);
-
+        const cat = categorias.find(c => c.id === mov.categoria) || null;
         const li = document.createElement("li");
-        li.className = "item-mov";
-
+        li.className = "item-lista";
+        li.style.gridTemplateColumns = "1fr 1fr 1fr 1fr 1fr 100px";
         li.innerHTML = `
-            <span>${mov.tipo}</span>
-            <span>${cat ? cat.nombre : "Sin categoría"}</span>
-            <span>$${mov.monto.toFixed(2)}</span>
-            <span>${mov.fecha}</span>
-            <span>${mov.descripcion || "—"}</span>
-            <span>
-                <button class="boton-secundario editar" data-id="${mov.id}">Editar</button>
-                <button class="boton eliminar" data-id="${mov.id}">Eliminar</button>
+            <span style="color:${mov.tipo === 'ingreso' ? '#27ae60' : '#c0392b'};">
+                ${mov.tipo.toUpperCase()}
+            </span>
+            <span>${cat ? cat.nombre : 'Sin categoría'}</span>
+            <span>$${Number(mov.monto).toFixed(2)}</span>
+            <span>${new Date(mov.fecha).toLocaleDateString('es-ES')}</span>
+            <span>${mov.descripcion || '-'}</span>
+            <span style="display:flex; gap:6px;">
+                <button class="boton-chico" onclick="editarMovimiento(${mov.id})">Editar</button>
+                <button class="boton-chico boton-eliminar" onclick="eliminarMovimiento(${mov.id})">X</button>
             </span>
         `;
-
         lista.appendChild(li);
     });
 }
 
-/* ---------------------------------------------------
-    Eventos principales
----------------------------------------------------- */
-function configurarEventosMovimientos() {
-    // Abrir modal desde la sección de movimientos
-    document.getElementById("btn-nuevo-mov").addEventListener("click", () => {
-        abrirModalMovimiento();
-    });
-
-    // Botón agregar movimiento desde dashboard (envía a la sección)
-    const btnDash = document.getElementById("btn-nueva-transaccion");
-    if (btnDash) {
-        btnDash.addEventListener("click", () => {
-            window.location.hash = "#transacciones";
-        });
-    }
-
-    // Cerrar modal
-    document.getElementById("cerrar-modal").addEventListener("click", cerrarModalMovimiento);
-
-    // Guardar movimiento
-    document.getElementById("form-transaccion").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        await guardarMovimiento();
-    });
-
-    // Filtros dinámicos
-    document.getElementById("filtro-tipo").addEventListener("change", cargarMovimientos);
-    document.getElementById("filtro-categoria").addEventListener("change", cargarMovimientos);
-    document.getElementById("buscar-mov").addEventListener("input", cargarMovimientos);
-
-    // Delegación para editar y eliminar
-    document.addEventListener("click", async (e) => {
-        if (e.target.classList.contains("eliminar")) {
-            await eliminarMovimiento(e.target.dataset.id);
-        }
-        if (e.target.classList.contains("editar")) {
-            await cargarMovimientoEnModal(e.target.dataset.id);
-        }
-    });
+function configurarBotones() {
+    const btn = document.getElementById("btn-nuevo-mov");
+    if (btn) btn.addEventListener("click", abrirModalNuevo);
+    const cerrar = document.getElementById("cerrar-modal");
+    if (cerrar) cerrar.addEventListener("click", cerrarModal);
 }
 
-/* ---------------------------------------------------
-    Modal
----------------------------------------------------- */
-function abrirModalMovimiento() {
-    document.getElementById("form-transaccion").reset();
+function abrirModalNuevo() {
+    const form = document.getElementById("form-transaccion");
+    if (!form) return;
+    form.reset();
+    form.dataset.editando = "";
     document.getElementById("modal-transaccion").classList.remove("modal-oculto");
 }
 
-function cerrarModalMovimiento() {
-    document.getElementById("modal-transaccion").classList.add("modal-oculto");
-}
-
-/* ---------------------------------------------------
-    Guardar / Editar Movimiento
----------------------------------------------------- */
-async function guardarMovimiento() {
-    const tipo = document.getElementById("tipo-mov").value;
-    const monto = parseFloat(document.getElementById("monto-mov").value);
-    const fecha = document.getElementById("fecha-mov").value;
-    const categoria = parseInt(document.getElementById("categoria-mov").value);
-    const descripcion = document.getElementById("descripcion-mov").value;
-
-    const idEdit = document.getElementById("form-transaccion").dataset.editId;
-
-    const data = { tipo, monto, fecha, categoria, descripcion };
-
-    if (idEdit) {
-        data.id = parseInt(idEdit);
-        await actualizarItem(STORES.MOVIMIENTOS, data);
-        delete document.getElementById("form-transaccion").dataset.editId;
-    } else {
-        await agregarItem(STORES.MOVIMIENTOS, data);
-    }
-
-    cerrarModalMovimiento();
-    await cargarMovimientos();
-
-    // 🔥 ACTUALIZAR DASHBOARD Y PRESUPUESTOS EN TIEMPO REAL
-    document.dispatchEvent(new Event("movimientos-actualizados"));
-}
-
-/* ---------------------------------------------------
-    Cargar movimiento en modal para editar
----------------------------------------------------- */
-async function cargarMovimientoEnModal(id) {
-    const mov = await obtenerItem(STORES.MOVIMIENTOS, parseInt(id));
-
+async function editarMovimiento(id) {
+    const mov = await obtenerPorId(STORES.MOVIMIENTOS, id);
+    if (!mov) return;
+    const form = document.getElementById("form-transaccion");
+    form.dataset.editando = id;
     document.getElementById("tipo-mov").value = mov.tipo;
     document.getElementById("monto-mov").value = mov.monto;
     document.getElementById("fecha-mov").value = mov.fecha;
     document.getElementById("categoria-mov").value = mov.categoria;
     document.getElementById("descripcion-mov").value = mov.descripcion || "";
-
-    document.getElementById("form-transaccion").dataset.editId = mov.id;
-
-    abrirModalMovimiento();
+    document.getElementById("modal-transaccion").classList.remove("modal-oculto");
 }
 
-/* ---------------------------------------------------
-    Eliminar movimiento
----------------------------------------------------- */
-async function eliminarMovimiento(id) {
-    await eliminarItem(STORES.MOVIMIENTOS, parseInt(id));
-    await cargarMovimientos();
+function cerrarModal() {
+    document.getElementById("modal-transaccion").classList.add("modal-oculto");
+}
 
-    // 🔥 Actualizar dashboard + presupuestos
+function configurarFormularioMov() {
+    const form = document.getElementById("form-transaccion");
+    if (!form) return;
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const mov = {
+            tipo: document.getElementById("tipo-mov").value,
+            monto: parseFloat(document.getElementById("monto-mov").value) || 0,
+            fecha: document.getElementById("fecha-mov").value,
+            categoria: parseInt(document.getElementById("categoria-mov").value),
+            descripcion: document.getElementById("descripcion-mov").value.trim()
+        };
+        const editId = form.dataset.editando;
+        if (editId) {
+            mov.id = parseInt(editId);
+            await actualizarItem(STORES.MOVIMIENTOS, mov);
+        } else {
+            mov.creado = Date.now();
+            await agregarItem(STORES.MOVIMIENTOS, mov);
+        }
+        cerrarModal();
+        await cargarMovimientos();
+        document.dispatchEvent(new Event("movimientos-actualizados"));
+    });
+}
+
+async function eliminarMovimiento(id) {
+    if (!confirm("¿Seguro que deseas eliminar este movimiento?")) return;
+    await eliminarItem(STORES.MOVIMIENTOS, id);
+    await cargarMovimientos();
     document.dispatchEvent(new Event("movimientos-actualizados"));
+}
+
+/* filtros */
+function configurarFiltros() {
+    const filtroTipo = document.getElementById("filtro-tipo");
+    const filtroCat  = document.getElementById("filtro-categoria");
+    const busqueda   = document.getElementById("buscar-mov");
+    if (filtroTipo) filtroTipo.addEventListener("change", aplicarFiltros);
+    if (filtroCat) filtroCat.addEventListener("change", aplicarFiltros);
+    if (busqueda) busqueda.addEventListener("input", aplicarFiltros);
+}
+
+async function aplicarFiltros() {
+    const movimientos = await obtenerTodos(STORES.MOVIMIENTOS);
+    const categorias = await obtenerTodos(STORES.CATEGORIAS);
+    const tipo = document.getElementById("filtro-tipo")?.value || 'todos';
+    const cat = document.getElementById("filtro-categoria")?.value || 'todas';
+    const busq = document.getElementById("buscar-mov")?.value.toLowerCase() || '';
+    let filtrados = movimientos;
+    if (tipo !== "todos") filtrados = filtrados.filter(m => m.tipo === tipo);
+    if (cat !== "todas") filtrados = filtrados.filter(m => String(m.categoria) === String(cat));
+    if (busq.trim() !== "") filtrados = filtrados.filter(m => (m.descripcion || "").toLowerCase().includes(busq));
+    const lista = document.getElementById("lista-movimientos");
+    const vacio = document.getElementById("mov-vacio");
+    lista.innerHTML = "";
+    if (filtrados.length === 0) { if (vacio) vacio.style.display = "block"; return; }
+    if (vacio) vacio.style.display = "none";
+    filtrados.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+    filtrados.forEach(mov => {
+        const catObj = categorias.find(c => c.id === mov.categoria);
+        const li = document.createElement("li");
+        li.className = "item-lista";
+        li.style.gridTemplateColumns = "1fr 1fr 1fr 1fr 1fr 100px";
+        li.innerHTML = `
+            <span style="color:${mov.tipo === 'ingreso' ? '#27ae60' : '#c0392b'};">${mov.tipo.toUpperCase()}</span>
+            <span>${catObj ? catObj.nombre : 'Sin categoría'}</span>
+            <span>$${Number(mov.monto).toFixed(2)}</span>
+            <span>${new Date(mov.fecha).toLocaleDateString('es-ES')}</span>
+            <span>${mov.descripcion || '-'}</span>
+            <span style="display:flex; gap:6px;">
+                <button class="boton-chico" onclick="editarMovimiento(${mov.id})">Editar</button>
+                <button class="boton-chico boton-eliminar" onclick="eliminarMovimiento(${mov.id})">X</button>
+            </span>
+        `;
+        lista.appendChild(li);
+    });
 }
