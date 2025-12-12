@@ -133,4 +133,4 @@ async function borrarPresupuesto(id) {
     await eliminarItem(STORES.PRESUPUESTOS, id);
     await cargarPresupuestosUI();
     document.dispatchEvent(new Event("presupuestos-actualizados"));
-                                        }
+}
