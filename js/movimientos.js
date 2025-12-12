@@ -1,15 +1,15 @@
-// js/movimientos.js
 document.addEventListener('db-ready', async () => {
     await cargarCategoriasFiltro();
     await cargarCategoriasEnModal();
     await cargarMovimientos();
-    configurarBotones();
-    configurarFiltros();
+    configurarBotonesMov();
+    configurarFiltrosMov();
     configurarFormularioMov();
 });
+
 document.addEventListener("categorias-actualizadas", async () => {
-    await cargarCategoriasEnModal();
     await cargarCategoriasFiltro();
+    await cargarCategoriasEnModal();
 });
 
 async function cargarCategoriasFiltro() {
@@ -36,20 +36,8 @@ async function cargarCategoriasEnModal() {
         op.textContent = cat.nombre;
         select.appendChild(op);
     });
-    // también actualizar select del panel de presupuestos si existe
-    const selPres = document.getElementById("pres-categoria");
-    if (selPres) {
-        selPres.innerHTML = '';
-        categorias.filter(c => c.tipo === 'gasto').forEach(cat => {
-            const op = document.createElement("option");
-            op.value = cat.id;
-            op.textContent = cat.nombre;
-            selPres.appendChild(op);
-        });
-    }
 }
 
-/* cargarMovimientos y demás se mantienen igual (mismo formato que ya usabas) */
 async function cargarMovimientos() {
     const lista = document.getElementById("lista-movimientos");
     const vacio = document.getElementById("mov-vacio");
@@ -85,19 +73,24 @@ async function cargarMovimientos() {
     });
 }
 
-function configurarBotones() {
-    const btn = document.getElementById("btn-nuevo-mov");
-    if (btn) btn.addEventListener("click", abrirModalNuevo);
+function configurarBotonesMov() {
+    const btnNuevo = document.getElementById("btn-nuevo-mov");
+    if (btnNuevo) btnNuevo.addEventListener("click", abrirModalNuevoMov);
+
     const cerrar = document.getElementById("cerrar-modal");
-    if (cerrar) cerrar.addEventListener("click", cerrarModal);
+    if (cerrar) cerrar.addEventListener("click", cerrarModalMov);
 }
 
-function abrirModalNuevo() {
+function abrirModalNuevoMov() {
     const form = document.getElementById("form-transaccion");
     if (!form) return;
     form.reset();
     form.dataset.editando = "";
     document.getElementById("modal-transaccion").classList.remove("modal-oculto");
+}
+
+function cerrarModalMov() {
+    document.getElementById("modal-transaccion").classList.add("modal-oculto");
 }
 
 async function editarMovimiento(id) {
@@ -111,10 +104,6 @@ async function editarMovimiento(id) {
     document.getElementById("categoria-mov").value = mov.categoria;
     document.getElementById("descripcion-mov").value = mov.descripcion || "";
     document.getElementById("modal-transaccion").classList.remove("modal-oculto");
-}
-
-function cerrarModal() {
-    document.getElementById("modal-transaccion").classList.add("modal-oculto");
 }
 
 function configurarFormularioMov() {
@@ -137,7 +126,7 @@ function configurarFormularioMov() {
             mov.creado = Date.now();
             await agregarItem(STORES.MOVIMIENTOS, mov);
         }
-        cerrarModal();
+        cerrarModalMov();
         await cargarMovimientos();
         document.dispatchEvent(new Event("movimientos-actualizados"));
     });
@@ -150,8 +139,7 @@ async function eliminarMovimiento(id) {
     document.dispatchEvent(new Event("movimientos-actualizados"));
 }
 
-/* filtros */
-function configurarFiltros() {
+function configurarFiltrosMov() {
     const filtroTipo = document.getElementById("filtro-tipo");
     const filtroCat  = document.getElementById("filtro-categoria");
     const busqueda   = document.getElementById("buscar-mov");
@@ -194,4 +182,4 @@ async function aplicarFiltros() {
         `;
         lista.appendChild(li);
     });
-}
+    }
