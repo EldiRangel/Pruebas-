@@ -1,5 +1,7 @@
-const DB_NAME = 'FinanzasDB';
+// js/db.js
+const DB_NAME = 'finanzas_db_v1';
 const DB_VERSION = 1;
+let db = null;
 
 const STORES = {
     CATEGORIAS: 'categorias',
@@ -7,73 +9,95 @@ const STORES = {
     PRESUPUESTOS: 'presupuestos'
 };
 
-let db;
-
 function abrirDB() {
     return new Promise((resolve, reject) => {
-        const solicitud = indexedDB.open(DB_NAME, DB_VERSION);
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
 
-        solicitud.onerror = () => reject('No se pudo abrir la DB');
+        req.onupgradeneeded = (e) => {
+            const idb = e.target.result;
 
-        solicitud.onsuccess = () => {
-            db = solicitud.result;
+            if (!idb.objectStoreNames.contains(STORES.CATEGORIAS)) {
+                const s = idb.createObjectStore(STORES.CATEGORIAS, { keyPath: 'id', autoIncrement: true });
+                s.createIndex('nombre', 'nombre', { unique: true });
+            }
+
+            if (!idb.objectStoreNames.contains(STORES.MOVIMIENTOS)) {
+                const s = idb.createObjectStore(STORES.MOVIMIENTOS, { keyPath: 'id', autoIncrement: true });
+                s.createIndex('fecha', 'fecha', { unique: false });
+            }
+
+            if (!idb.objectStoreNames.contains(STORES.PRESUPUESTOS)) {
+                const s = idb.createObjectStore(STORES.PRESUPUESTOS, { keyPath: 'id', autoIncrement: true });
+                // índices si deseas
+                s.createIndex('categoria', 'categoria', { unique: false });
+                s.createIndex('mes_ano', ['mes','ano'], { unique: false });
+            }
+        };
+
+        req.onsuccess = (e) => {
+            db = e.target.result;
+            console.log('DB abierta', DB_NAME);
             document.dispatchEvent(new Event('db-ready'));
             resolve(db);
         };
 
-        solicitud.onupgradeneeded = (e) => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains(STORES.CATEGORIAS)) {
-                db.createObjectStore(STORES.CATEGORIAS, { keyPath: 'id', autoIncrement: true });
-            }
-            if (!db.objectStoreNames.contains(STORES.MOVIMIENTOS)) {
-                db.createObjectStore(STORES.MOVIMIENTOS, { keyPath: 'id', autoIncrement: true });
-            }
-            if (!db.objectStoreNames.contains(STORES.PRESUPUESTOS)) {
-                db.createObjectStore(STORES.PRESUPUESTOS, { keyPath: 'id', autoIncrement: true });
-            }
+        req.onerror = (e) => {
+            console.error('Error abriendo DB', e);
+            reject(e);
         };
     });
 }
 
-function agregarItem(store, item) {
+// helpers CRUD
+function crearTransaccion(storeName, mode = 'readonly') {
+    const tx = db.transaction([storeName], mode);
+    return tx.objectStore(storeName);
+}
+
+function agregarItem(store, data) {
     return new Promise((resolve, reject) => {
-        const trans = db.transaction([store], 'readwrite');
-        trans.objectStore(store).add(item).onsuccess = () => resolve();
-        trans.onerror = () => reject('Error al agregar');
+        const objStore = crearTransaccion(store, 'readwrite');
+        const req = objStore.add(data);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = (e) => reject(e.target.error);
     });
 }
 
-function actualizarItem(store, item) {
+function actualizarItem(store, data) {
     return new Promise((resolve, reject) => {
-        const trans = db.transaction([store], 'readwrite');
-        trans.objectStore(store).put(item).onsuccess = () => resolve();
-        trans.onerror = () => reject('Error al actualizar');
+        const objStore = crearTransaccion(store, 'readwrite');
+        const req = objStore.put(data);
+        req.onsuccess = () => resolve(true);
+        req.onerror = (e) => reject(e.target.error);
     });
 }
 
 function eliminarItem(store, id) {
     return new Promise((resolve, reject) => {
-        const trans = db.transaction([store], 'readwrite');
-        trans.objectStore(store).delete(id).onsuccess = () => resolve();
-        trans.onerror = () => reject('Error al eliminar');
+        const objStore = crearTransaccion(store, 'readwrite');
+        const req = objStore.delete(id);
+        req.onsuccess = () => resolve(true);
+        req.onerror = (e) => reject(e.target.error);
     });
 }
 
 function obtenerTodos(store) {
     return new Promise((resolve, reject) => {
-        const trans = db.transaction([store], 'readonly');
-        const req = trans.objectStore(store).getAll();
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject('Error al obtener todos');
+        const objStore = crearTransaccion(store, 'readonly');
+        const req = objStore.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = (e) => reject(e.target.error);
     });
 }
 
 function obtenerPorId(store, id) {
     return new Promise((resolve, reject) => {
-        const trans = db.transaction([store], 'readonly');
-        const req = trans.objectStore(store).get(id);
+        const objStore = crearTransaccion(store, 'readonly');
+        const req = objStore.get(id);
         req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject('Error al obtener por id');
+        req.onerror = (e) => reject(e.target.error);
     });
 }
+
+// Inicializar DB ahora
+abrirDB().catch(err => console.error('No se pudo abrir DB', err));
